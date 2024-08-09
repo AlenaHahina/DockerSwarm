@@ -1,0 +1,225 @@
+{\rtf1\ansi\deff0\nouicompat{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil\fcharset204 Calibri;}}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang1033\par
+\f1\lang1049\'d2\'e5\'ec\'e0: Docker Compose \'e8 Docker Swarm\par
+\'c7\'e0\'e4\'e0\'ed\'e8\'e5 1:\par
+1) \'f1\'ee\'e7\'e4\'e0\'f2\'fc \'f1\'e5\'f0\'e2\'e8\'f1, \'f1\'ee\'f1\'f2\'ee\'ff\'f9\'e8\'e9 \'e8\'e7 2 \'f0\'e0\'e7\'eb\'e8\'f7\'ed\'fb\'f5 \'ea\'ee\'ed\'f2\'e5\'e9\'ed\'e5\'f0\'ee\'e2: 1 - \'e2\'e5\'e1, 2 - \'c1\'c4\par
+2) \'e4\'e0\'eb\'e5\'e5 \'ed\'e5\'ee\'e1\'f5\'ee\'e4\'e8\'ec\'ee \'f1\'ee\'e7\'e4\'e0\'f2\'fc 3 \'f1\'e5\'f0\'e2\'e8\'f1\'e0 \'e2 \'ea\'e0\'e6\'e4\'ee\'ec \'ee\'ea\'f0\'f3\'e6\'e5\'ed\'e8\'e8 (dev, prod, lab)\par
+3) \'ef\'ee \'e8\'f2\'ee\'e3\'f3 \'ed\'e0 \'ea\'e0\'e6\'e4\'ee\'e9 \'ed\'ee\'e4\'e5 \'e4\'ee\'eb\'e6\'ed\'ee \'e1\'fb\'f2\'fc \'ef\'ee 2 \'f0\'e0\'e1\'ee\'f2\'e0\'fe\'f9\'e8\'f5 \'ea\'ee\'ed\'f2\'e5\'e9\'ed\'e5\'f0\'e0\par
+4) \'e2\'fb\'e2\'ee\'e4\'fb \'e7\'e0\'f4\'e8\'ea\'f1\'e8\'f0\'ee\'e2\'e0\'f2\'fc\par
+\par
+\'c7\'e0\'e4\'e0\'ed\'e8\'e5 2*:\par
+1) \'ed\'f3\'e6\'ed\'ee \'f1\'ee\'e7\'e4\'e0\'f2\'fc 2 \'c4\'ca-\'f4\'e0\'e9\'eb\'e0, \'e2 \'ea\'ee\'f2\'ee\'f0\'fb\'f5 \'e1\'f3\'e4\'f3\'f2 \'ee\'ef\'e8\'f1\'fb\'e2\'e0\'f2\'fc\'f1\'ff \'f1\'e5\'f0\'e2\'e8\'f1\'fb\par
+2) \'ef\'ee\'e2\'f2\'ee\'f0\'e8\'f2\'fc \'e7\'e0\'e4\'e0\'ed\'e8\'e5 1 \'e4\'eb\'ff \'e4\'e2\'f3\'f5 \'ee\'ea\'f0\'f3\'e6\'e5\'ed\'e8\'e9: lab, dev\par
+3) \'ee\'e1\'ff\'e7\'e0\'f2\'e5\'eb\'fc\'ed\'ee \'ef\'f0\'ee\'e2\'e5\'f0\'e8\'f2\'fc \'e8 \'e7\'e0\'f4\'e8\'ea\'f1\'e8\'f0\'ee\'e2\'e0\'f2\'fc \'f0\'e5\'e7\'f3\'eb\'fc\'f2\'e0\'f2\'fb, \'f7\'f2\'ee\'e1\'fb \'ec\'ee\'e6\'ed\'ee \'e1\'fb\'eb\'ee \'e2\'fb\'f1\'eb\'e0\'f2\'fc \'ef\'f0\'e5\'ef\'ee\'e4\'e0\'e2\'e0\'f2\'e5\'eb\'fe \'e4\'eb\'ff \'ef\'f0\'ee\'e2\'e5\'f0\'ea\'e8\par
+ \par
+\'d5\'ee\'e4 \'f0\'e0\'e1\'ee\'f2\'fb:\par
+\'c7\'e0\'e4\'e0\'ed\'e8\'e5 1:\par
+1) \'f1\'ee\'e7\'e4\'e0\'f2\'fc \'f1\'e5\'f0\'e2\'e8\'f1, \'f1\'ee\'f1\'f2\'ee\'ff\'f9\'e8\'e9 \'e8\'e7 2 \'f0\'e0\'e7\'eb\'e8\'f7\'ed\'fb\'f5 \'ea\'ee\'ed\'f2\'e5\'e9\'ed\'e5\'f0\'ee\'e2: 1 - \'e2\'e5\'e1, 2 - \'c1\'c4\par
+alena@alena-VirtualBox:~$ sudo nano docker-compose.dev.yml\par
+version: '3.8'\par
+\par
+services:\par
+  web:\par
+    image: nginx:latest\par
+    ports:\par
+      - "80:80"\par
+    networks:\par
+      - my_network\par
+\par
+  db:\par
+    image: mariadb:10.8\par
+    environment:\par
+      MYSQL_ROOT_PASSWORD: example_password\par
+      MYSQL_DATABASE: example_db\par
+      MYSQL_USER: example_user\par
+      MYSQL_PASSWORD: example_password\par
+    networks:\par
+      - my_network\par
+\par
+networks:\par
+  my_network:\par
+    driver: bridge\par
+alena@alena-VirtualBox:~$ docker swarm init\par
+alena@alena-VirtualBox:~$ sudo docker node update --label-add env=dev gb-linux\par
+\par
+alena@alena-VirtualBox:~$ sudo docker node update --label-add env=prod gb-linux\par
+\par
+alena@alena-VirtualBox:~$ sudo docker node update --label-add env=lab gb-linux\par
+\par
+alena@alena-VirtualBox:~$ sudo nano docker-compose.yml\par
+version: '3.8'\par
+\par
+services:\par
+  web:\par
+    image: nginx:latest\par
+    deploy:\par
+      replicas: 1\par
+      placement:\par
+        constraints: [node.labels.env == dev]\par
+    ports:\par
+      - "8080:80"\par
+    networks:\par
+      - my_network\par
+\par
+  db:\par
+    image: mariadb:10.8\par
+    environment:\par
+      MYSQL_ROOT_PASSWORD: example_password\par
+      MYSQL_DATABASE: example_db\par
+      MYSQL_USER: example_user\par
+      MYSQL_PASSWORD: example_password\par
+    deploy:\par
+      replicas: 1\par
+      placement:\par
+        constraints: [node.labels.env == dev]\par
+    networks:\par
+      - my_network\par
+\par
+networks:\par
+  my_network:\par
+    driver: overlay\par
+\par
+alena@alena-VirtualBox:~$ sudo docker stack deploy -c docker-compose.yml dev_stack\par
+\par
+Creating network dev_stack_my_network\par
+Creating service dev_stack_web\par
+Creating service dev_stack_db\par
+\par
+alena@alena-VirtualBox:~$ sudo docker stack deploy -c docker-compose.prod.yml prod_stack\par
+\par
+Creating network prod_stack_default\par
+Creating service prod_stack_db\par
+failed to create service prod_stack_db: Error response from daemon: rpc error: code = InvalidArgument desc = ContainerSpec: image reference must be provided\par
+\par
+alena@alena-VirtualBox:~$ sudo docker stack deploy -c docker-compose.lab.yml lab_stack\par
+\par
+Creating network lab_stack_my_network\par
+Creating service lab_stack_db\par
+Creating service lab_stack_web\par
+\par
+alena@alena-VirtualBox:~$ sudo docker stack services dev_stack\par
+ID             NAME            MODE         REPLICAS   IMAGE          PORTS\par
+jdytfxc3g1sk   dev_stack_db    replicated   0/1        mariadb:10.8   \par
+esps3tb215ha   dev_stack_web   replicated   0/1        nginx:latest   *:8080->80/tcp\par
+alena@alena-VirtualBox:~$ sudo docker stack services prod_stack\par
+ID             NAME             MODE         REPLICAS   IMAGE          PORTS\par
+zjzdhwp76ti1   prod_stack_db    replicated   0/1        mariadb:10.8   \par
+m2ivef7p6u32   prod_stack_web   replicated   0/1        nginx:latest   *:8081->80/tcp\par
+\par
+alena@alena-VirtualBox:~$ sudo docker stack services lab_stack\par
+ID             NAME            MODE         REPLICAS   IMAGE          PORTS\par
+6nejh08h74xv   lab_stack_db    replicated   1/1        mariadb:10.8   \par
+0jmxupiwyv75   lab_stack_web   replicated   1/1        nginx:latest   *:8082->80/tcp\par
+\par
+2) \'e4\'e0\'eb\'e5\'e5 \'ed\'e5\'ee\'e1\'f5\'ee\'e4\'e8\'ec\'ee \'f1\'ee\'e7\'e4\'e0\'f2\'fc 3 \'f1\'e5\'f0\'e2\'e8\'f1\'e0 \'e2 \'ea\'e0\'e6\'e4\'ee\'ec \'ee\'ea\'f0\'f3\'e6\'e5\'ed\'e8\'e8 (dev, prod, lab)\par
+alena@alena-VirtualBox:~$ nano docker-compose.dev.yml\par
+version: '3.8'\par
+services:\par
+  web:\par
+    environment:\par
+      - ENV=dev\par
+\par
+ db:\par
+    environment:\par
+      - ENV=dev\par
+alena@alena-VirtualBox:~$ nano docker-compose.prod.yml\par
+version: '3.8'\par
+\par
+services:\par
+  web:\par
+    environment:\par
+      - ENV=prod\par
+\par
+  db:\par
+    environment:\par
+      - ENV=prod\par
+alena@alena-VirtualBox:~$ nano docker-compose.lab.yml\par
+version: '3.8'\par
+\par
+services:\par
+  web:\par
+    environment:\par
+      - ENV=lab\par
+\par
+  db:\par
+    environment:\par
+      - ENV=lab\par
+3) \'ef\'ee \'e8\'f2\'ee\'e3\'f3 \'ed\'e0 \'ea\'e0\'e6\'e4\'ee\'e9 \'ed\'ee\'e4\'e5 \'e4\'ee\'eb\'e6\'ed\'ee \'e1\'fb\'f2\'fc \'ef\'ee 2 \'f0\'e0\'e1\'ee\'f2\'e0\'fe\'f9\'e8\'f5 \'ea\'ee\'ed\'f2\'e5\'e9\'ed\'e5\'f0\'e0\par
+alena@alena-VirtualBox:~$ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d\par
+alena@alena-VirtualBox:~$ docker ps\par
+alena@alena-VirtualBox:~$ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d\par
+alena@alena-VirtualBox:~$ docker ps\par
+alena@alena-VirtualBox:~$ docker-compose -f docker-compose.yml -f docker-compose.lab.yml up -d\par
+alena@alena-VirtualBox:~$ docker ps\par
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS                  NAMES\par
+xxxxxxx        nginx:latest   "/docker-entrypoint.\'85"   x minutes ago    Up x minutes    0.0.0.0:80->80/tcp     dev_web_1\par
+xxxxxxx        mariadb:10.8   "docker-entrypoint.s\'85"   x minutes ago    Up x minutes    3306/tcp               dev_db_1\par
+\par
+\'c7\'e0\'e4\'e0\'ed\'e8\'e5 2*:\par
+1) \'ed\'f3\'e6\'ed\'ee \'f1\'ee\'e7\'e4\'e0\'f2\'fc 2 \'c4\'ca-\'f4\'e0\'e9\'eb\'e0, \'e2 \'ea\'ee\'f2\'ee\'f0\'fb\'f5 \'e1\'f3\'e4\'f3\'f2 \'ee\'ef\'e8\'f1\'fb\'e2\'e0\'f2\'fc\'f1\'ff \'f1\'e5\'f0\'e2\'e8\'f1\'fb\par
+alena@alena-VirtualBox:~$ nano docker-compose.lab.yml\par
+version: '3.8'\par
+\par
+services:\par
+  web:\par
+    image: nginx:latest\par
+    environment:\par
+      - ENV=lab\par
+    ports:\par
+      - "8080:80"\par
+    networks:\par
+      - my_network\par
+\par
+  db:\par
+    image: mariadb:10.8\par
+    environment:\par
+      MYSQL_ROOT_PASSWORD: example_password\par
+      MYSQL_DATABASE: example_db\par
+      MYSQL_USER: example_user\par
+      MYSQL_PASSWORD: example_password\par
+    networks:\par
+      - my_network\par
+\par
+networks:\par
+  my_network:\par
+    driver: bridge\par
+alena@alena-VirtualBox:~$ nano docker-compose.dev.yml\par
+version: '3.8'\par
+\par
+services:\par
+  web:\par
+    image: nginx:latest\par
+    environment:\par
+      - ENV=dev\par
+    ports:\par
+      - "8080:80"\par
+    networks:\par
+      - my_network\par
+\par
+  db:\par
+    image: mariadb:10.8\par
+    environment:\par
+      MYSQL_ROOT_PASSWORD: example_password\par
+      MYSQL_DATABASE: example_db\par
+      MYSQL_USER: example_user\par
+      MYSQL_PASSWORD: example_password\par
+    networks:\par
+      - my_network\par
+\par
+networks:\par
+  my_network:\par
+    driver: bridge\par
+alena@alena-VirtualBox:~$ docker-compose -f docker-compose.lab.yml up -d\par
+docker ps\par
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS                  NAMES\par
+xxxxxxx        nginx:latest   "/docker-entrypoint.\'85"   x minutes ago    Up x minutes    0.0.0.0:80->80/tcp     dev_web_1\par
+xxxxxxx        mariadb:10.8   "docker-entrypoint.s\'85"   x minutes ago    Up x minutes    3306/tcp               dev_db_1\par
+\par
+alena@alena-VirtualBox:~$ docker-compose -f docker-compose.dev.yml up -d\par
+docker ps\par
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS                  NAMES\par
+xxxxxxx        nginx:latest   "/docker-entrypoint.\'85"   x minutes ago    Up x minutes    0.0.0.0:80->80/tcp     lab_web_1\par
+xxxxxxx        mariadb:10.8   "docker-entrypoint.s\'85"   x minutes ago    Up x minutes    3306/tcp               lab_db_1\f0\lang9\par
+}
+ 
